@@ -1,41 +1,53 @@
 import { createContext, useContext, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getFileInfo, readFile, writeFile } from "../helpers/storage";
 
 const scanHistoryCtx = createContext({
   isProcessing: false,
   scanHistory: [],
-  fetchScanHistory: () => {},
-  updateScanHistory: ({ scanUrl, scanDate }) => {},
+  fetchScanHistory: async () => {},
+  updateScanHistory: async ({ scanUrl, scanDate }) => {},
 });
+
+const FILENAME = "scanhistoryitems.json";
 
 export const ScanHistoryProvider = ({ children }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [scanHistory, setScanHistory] = useState([]);
 
-  const fetchScanHistory = () => {
+  const fetchScanHistory = async () => {
     setIsProcessing(true);
 
-    AsyncStorage.getItem("scanhistory").then((res) => {
-      const data = JSON.parse(res);
+    try {
+      const fileInfo = await getFileInfo(FILENAME);
 
-      if (data) {
-        setScanHistory(data);
-        setIsProcessing(false);
-      } else {
-        setIsProcessing(false);
+      if (!fileInfo.exists) {
+        await writeFile(FILENAME, []);
       }
-    });
+
+      const data = await readFile(FILENAME);
+
+      setScanHistory(data);
+      setIsProcessing(false);
+      return data;
+    } catch (e) {
+      setIsProcessing(false);
+    }
   };
 
-  const updateScanHistory = ({ scanUrl, scanDate }) => {
+  const updateScanHistory = async ({ scanUrl, scanDate }) => {
     setIsProcessing(true);
 
-    AsyncStorage.getItem("scanhistory").then((res) => {
-      const data = JSON.parse(res);
-      const updatedData = data.push({ scanUrl: scanUrl, scanDate: scanDate });
-
-      AsyncStorage.setItem("scanhistory", JSON.stringify(updatedData));
-    });
+    try {
+      const prevdata = await fetchScanHistory();
+      await writeFile(FILENAME, [
+        ...prevdata,
+        { Url: scanUrl, dateTime: scanDate },
+      ]);
+      setIsProcessing(false);
+    } catch (e) {
+      console.log(e);
+      setIsProcessing(false);
+    }
   };
 
   return (
