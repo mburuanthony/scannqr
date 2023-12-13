@@ -1,3 +1,4 @@
+import "expo-dev-client";
 import { useCallback } from "react";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
