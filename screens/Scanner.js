@@ -3,6 +3,7 @@ import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { Camera, CameraType } from "expo-camera";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
@@ -69,7 +70,11 @@ export default function Scanner() {
         ]}
       >
         {hasPermission ? (
-          <BarCodeScanner
+          <Camera
+            type={CameraType.back}
+            barCodeScannerSettings={{
+              barCodeTypes: [BarCodeScanner.Constants.BarCodeType.qr],
+            }}
             onBarCodeScanned={scanned ? undefined : onQrCodeScanned}
             style={StyleSheet.absoluteFillObject}
           />
